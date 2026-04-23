@@ -16,6 +16,8 @@ abstract class TrackingRepository {
   Future<Either<Failure, Unit>> skipTrial(String trialId);
   Future<Either<Failure, Unit>> undoTrialLog(String trialId);
 
+  Future<Either<Failure, Unit>> saveTrials(List<Trial> trials);
+
   // Reflections
   Stream<List<Reflection>> watchReflectionsForPact(String pactId);
   Future<Either<Failure, Unit>> saveReflection(Reflection reflection);

@@ -28,7 +28,7 @@ After modifying any file with @freezed, @riverpod, or Drift table definitions:
 - TrialStatus.skipped is ONLY set by AutoSkipDetectionUseCase, never by user action.
 - The 10-trial minimum gate uses completedCount (completed + late), not skippedCount.
 - CardHealthState is derived, never stored.
-- Slot progression: 1 slot at start, unlock at 3/10/20 completed PACTs, hard cap of 4.
+- Slot progression: 1 slot at start, unlock at 3/9/21 completed PACTs, hard cap of 4.
 
 ## Specs
 All design decisions live in /specs/. Read the relevant spec before implementing any feature.

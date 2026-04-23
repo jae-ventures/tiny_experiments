@@ -125,4 +125,16 @@ class DriftPactRepository implements PactRepository {
       return left(Failure('Failed to delete Pact', error: e, stackTrace: st));
     }
   }
+
+  @override
+  Future<Either<Failure, int>> countPactsByStatus(PactStatus status) async {
+    try {
+      final rows = await (_db.select(_db.pacts)
+            ..where((p) => p.status.equalsValue(status)))
+          .get();
+      return right(rows.length);
+    } catch (e, st) {
+      return left(Failure('Failed to count PACTs by status', error: e, stackTrace: st));
+    }
+  }
 }

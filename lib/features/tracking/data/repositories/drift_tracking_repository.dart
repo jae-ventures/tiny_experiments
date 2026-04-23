@@ -117,6 +117,34 @@ class DriftTrackingRepository implements TrackingRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> saveTrials(List<Trial> trials) async {
+    try {
+      await _db.batch((batch) {
+        for (final trial in trials) {
+          batch.insert(
+            _db.trials,
+            db.TrialsCompanion.insert(
+              id: trial.id,
+              pactId: trial.pactId,
+              sessionNumber: trial.sessionNumber,
+              sequenceIndex: trial.sequenceIndex,
+              scheduledDate: trial.scheduledDate,
+              status: trial.status,
+              createdAt: trial.createdAt,
+              completedAt: drift.Value(trial.completedAt),
+              note: drift.Value(trial.note),
+            ),
+            mode: drift.InsertMode.insertOrReplace,
+          );
+        }
+      });
+      return right(unit);
+    } catch (e, st) {
+      return left(Failure('Failed to save Trials', error: e, stackTrace: st));
+    }
+  }
+
+  @override
   Stream<List<Reflection>> watchReflectionsForPact(String pactId) {
     return (_db.select(_db.reflections)..where((r) => r.pactId.equals(pactId)))
         .watch()
