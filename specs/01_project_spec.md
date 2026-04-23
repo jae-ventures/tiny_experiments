@@ -1,14 +1,14 @@
 # Tiny Experiments — Project Specification
 
 **Version:** 0.3 (Draft)
-**Last Updated:** 2026-04-21
+**Last Updated:** 2026-04-22
 **Status:** In Progress
 
 ---
 
 ## 1. Vision
 
-Tiny Experiments is a mobile-first (iOS, Android) and web app that helps users explore their curiosities through structured, low-pressure experiments called **PACTs**. It sits at the intersection of *Tiny Experiments* (Anne-Laure Le Cunff) and *Atomic Habits* (James Clear) — prioritizing systems and curiosity over rigid goal-setting and outcome pressure.
+Tiny Experiments is a mobile-first (Android, iOS) and web app that helps users explore their curiosities through structured, low-pressure experiments called **PACTs**. It sits at the intersection of *Tiny Experiments* (Anne-Laure Le Cunff) and *Atomic Habits* (James Clear) — prioritizing systems and curiosity over rigid goal-setting and outcome pressure.
 
 The core philosophy: **just show up**. There is no pressure to perform. The repeatable trials of a PACT generate observable data that helps users make better decisions about what to persist with, pause, or pivot away from.
 

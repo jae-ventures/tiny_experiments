@@ -1,6 +1,8 @@
 # tiny_experiments
 
-A new Flutter project.
+An app for keeping life experimental. A life tracker inspired by Tiny Experiments by Anne-Laure Le Cunff.
+
+A local-first mobile app (Android, iOS) and web app built using Flutter (Dart). It sits at the intersection of the curiosity-driven exploration of *Tiny Experiments* by Anne-Laure Le Cunff and the intention-driven habit-building of *Atomic Habits* by James Clear, focusing on "showing up" rather than outcome pressure.
 
 ## Getting Started
 
