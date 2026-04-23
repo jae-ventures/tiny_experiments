@@ -60,12 +60,12 @@ To align with the principle of "think tiny," users begin with a single active PA
 |---|---|
 | 0 | 1 |
 | 3 | 2 |
-| 10 | 3 |
-| 20 | 4 (maximum) |
+| 9 | 3 (6 additional PACTs) |
+| 21 | 4 (maximum, 12 additional PACTs) |
 
-The cap of 4 simultaneous active PACTs is intentional and permanent for v1.0. It is a feature, not a limitation. Future versions may explore higher limits as an optional setting.
+The cap of 4 simultaneous active PACTs is intentional and permanent for v1.0. It is a feature, not a limitation.
 
-Within the cap, users may configure a **personal active limit** (1 up to their unlocked maximum) in Settings. This allows someone who has unlocked 3 slots but wants to focus on just 1 to enforce that constraint on themselves.
+*Note: The number of locked vs. unlocked slots is intentionally not tracked visually on the main dashboard to keep the interface clean and focused. Any hints about slot progression should only appear in the Settings page.*
 
 ### 2.5 The Curiosity Backlog
 

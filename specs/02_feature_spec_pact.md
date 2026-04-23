@@ -188,17 +188,16 @@ Reflection checkpoints are inserted into the schedule at the midpoint and endpoi
 
 ### 6.1 Rules
 
-- Initial slots: **3**
-- Slots unlock after completing whole PACTs (reaching `completed` status)
-- Suggested progression (open question — subject to change):
+- Initial slots: **1**
+- Slots unlock after completing whole PACTs (reaching `completed` status). This progression tracking happens silently in the background to keep the core UI clean.
+- Progression mapping:
 
-| Completed PACTs | Total Slots Unlocked |
+| Total Completed PACTs | Total Slots Unlocked |
 |---|---|
-| 0 | 3 |
-| 2 | 4 |
-| 5 | 5 |
-| 10 | 6 |
-| 20 | 7 |
+| 0 | 1 |
+| 3 | 2 |
+| 9 | 3 |
+| 21 | 4 (Maximum) |
 
 - Paused PACTs **do** consume a slot (open question — see project spec)
 - Abandoned PACTs do **not** count toward completion unlock
