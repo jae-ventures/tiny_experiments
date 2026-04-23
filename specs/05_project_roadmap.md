@@ -13,7 +13,7 @@ The AI will read this file, understand the overarching goal of the Epic, and exe
 **Goal:** Scaffold the app structure, local database, and domain models.
 
 *   **Task 1.1:** Scaffold the Flutter project architecture (`lib/core/`, `lib/features/`). Install foundational dependencies (`flutter_riverpod`, `fpdart`, `freezed`, `drift`, etc.) and wrap the app in `ProviderScope`.
-*   **Task 1.2:** Set up the Drift database connection layer. Create the platform abstraction for `NativeDatabase` (mobile) and `WasmDatabase` (web).
+*   **Task 1.2:** Set up the Drift database connection layer. Implement using `drift_flutter`'s `driftDatabase()` to automatically handle the Native and Wasm abstractions.
 *   **Task 1.3:** Define the pure Domain Models using Freezed (`Pact`, `Trial`, `Reflection`, `SlotState`) and their associated Enums (`PactCadence`, `PactStatus`, etc.).
 *   **Task 1.4:** Define the Data Layer Schema. Create the Drift table classes (`Pacts`, `Trials`, `Reflections`) that map to the domain models, and run the code generator.
 *   **Task 1.5:** Implement the Repository layer. Define the abstract `PactRepository` interface and write its concrete Drift implementation (handling the mapping between Drift's generated classes and our Freezed domain models).
