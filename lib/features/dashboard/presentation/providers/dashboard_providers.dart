@@ -1,7 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../features/pact/domain/models/pact.dart';
 import '../../../../features/pact/domain/models/slot_state.dart';
+import '../../../../features/pact/domain/use_cases/get_active_pacts_use_case.dart';
 import '../../../../features/pact/domain/use_cases/get_slot_availability_use_case.dart';
+import '../../../../features/tracking/data/repositories/drift_tracking_repository.dart';
+import '../../../../features/tracking/domain/models/trial.dart';
+
+// ── Slot availability ─────────────────────────────────────────────────────────
 
 /// Default state for a brand-new user: 1 slot, nothing active.
 const _kNewUserSlotState = SlotState(
@@ -18,4 +24,23 @@ const _kNewUserSlotState = SlotState(
 final slotStateProvider = FutureProvider<SlotState>((ref) async {
   final result = await ref.read(getSlotAvailabilityUseCaseProvider).execute();
   return result.fold((_) => _kNewUserSlotState, (s) => s);
+});
+
+// ── Active PACTs ──────────────────────────────────────────────────────────────
+
+/// Live stream of all active PACTs, sorted by the use case (creation order).
+/// Rebuilds the carousel automatically when a PACT is created, paused, or completed.
+final activePactsProvider = StreamProvider<List<Pact>>((ref) {
+  return ref.watch(getActivePactsUseCaseProvider).execute();
+});
+
+// ── Trials per PACT ───────────────────────────────────────────────────────────
+
+/// All trials for a given PACT id — reactive Drift stream.
+///
+/// Auto-updates when a trial is logged, skipped, or undone, so the check-in
+/// button and progress chart refresh without any manual invalidation.
+final trialsForPactProvider =
+    StreamProvider.family<List<Trial>, String>((ref, pactId) {
+  return ref.watch(trackingRepositoryProvider).watchTrialsForPact(pactId);
 });
