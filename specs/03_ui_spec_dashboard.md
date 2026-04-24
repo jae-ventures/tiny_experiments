@@ -95,6 +95,7 @@ The possibility space is alive. Dots move continuously and independently, giving
 - **Active slot dots** — gentle breathing at a slightly different rhythm, color-filled; drift is slow and deliberate
 - **Backlog dots** — faster drift relative to slot dots, subtly flickering opacity to feel like distant lights
 - **New slot unlock** — dot blooms into existence from 0 scale with a brief radial burst, then joins the drift
+- **New PACT created** — when the user returns to the dashboard after creation, the slot dot that now represents the new PACT plays a brief "arrival" flash: it pulses once through its full palette color (scale 1.0 → 1.15 → 1.0, opacity 1.0 → 0.6 → 1.0, ~600 ms). This confirms which dot is "theirs" and which color belongs to the new experiment. The animation plays once on first render after navigation and does not repeat.
 - **PACT completion** — slot dot pulses brightly through its PACT color once, then fades to gray and resumes its empty idle state
 
 All animations must respect the system-level `reduceMotion` accessibility setting. When enabled, all drift and pulse animations are replaced with static positions and states. The tap-and-hold freeze gesture is also disabled in this mode.
@@ -137,14 +138,22 @@ Each card contains:
 - **Color is auto-assigned** from a curated palette at PACT creation time. The palette should be warm, distinct, and non-clinical — colors that feel personal rather than categorical. No two currently active PACTs share the same color; if the palette is exhausted (max 4 active), colors cycle. User color selection may be unlocked as a progression reward in a future version.
 
 **Progress Chart (left body)**
-- A compact grid of small squares or circles representing the trial schedule
-- Each cell = one scheduled trial, colored by status:
-  - Completed → full color (PACT's color)
-  - Skipped → muted / gray-crossed
-  - Pending → empty / outline
-  - Future → very faint
-- Sessions from a resumed PACT are shown in a **lighter tint or alternate shade** of the PACT's color, creating visible color-banding between original and resumed sessions
-- The chart is informational — not interactive from the card view. Tapping the chart opens the full PACT detail screen.
+
+The card chart is a compact **preview** of the fuller date-connected chart shown on the PACT detail screen. Same visual language, lower resolution — a density indicator that earns a tap.
+
+- A compact `Wrap` grid of 10×10 px cells, one per scheduled trial
+- Each cell uses a shape and color to communicate status:
+
+| Trial status | Shape | Color |
+|---|---|---|
+| Completed | Circle (filled) | PACT's palette color |
+| Late | Circle (filled) | PACT color at 65% opacity |
+| Skipped | Square or diamond | Muted amber — desaturated, clearly "off" without being alarming |
+| Pending — due today / overdue | Circle (outline only) | PACT color stroke |
+| Pending — future | Circle (faint outline) | PACT color at ~15% opacity |
+
+- Sessions from a resumed PACT are shown in a **lighter tint** of the PACT's color, creating visible color-banding between original and resumed sessions
+- The chart is not interactive from the card view — tapping it opens the full PACT detail screen where each dot is date-labeled and larger
 
 **Check-in Button (right body)**
 - A prominent circular button — the primary affordance of the entire app
