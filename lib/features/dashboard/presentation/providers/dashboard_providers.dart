@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../features/pact/data/repositories/drift_pact_repository.dart';
 import '../../../../features/pact/domain/models/pact.dart';
 import '../../../../features/pact/domain/models/slot_state.dart';
 import '../../../../features/pact/domain/use_cases/get_active_pacts_use_case.dart';
@@ -24,6 +25,21 @@ const _kNewUserSlotState = SlotState(
 final slotStateProvider = FutureProvider<SlotState>((ref) async {
   final result = await ref.read(getSlotAvailabilityUseCaseProvider).execute();
   return result.fold((_) => _kNewUserSlotState, (s) => s);
+});
+
+// ── Paused PACT count ─────────────────────────────────────────────────────────
+
+/// Count of currently paused PACTs — used to badge the Pause Drawer item in
+/// the action bottom sheet. Invalidated / re-fetched whenever the sheet opens
+/// (via [ref.invalidate]) so the count is always fresh.
+///
+/// TODO: replace with a reactive stream once watchPausedPacts is added to
+/// PactRepository (Epic 4 — pause flow).
+final pausedPactCountProvider = FutureProvider<int>((ref) async {
+  final result = await ref
+      .read(pactRepositoryProvider)
+      .countPactsByStatus(PactStatus.paused);
+  return result.fold((_) => 0, (n) => n);
 });
 
 // ── Active PACTs ──────────────────────────────────────────────────────────────
