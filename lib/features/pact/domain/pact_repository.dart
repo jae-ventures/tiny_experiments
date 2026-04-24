@@ -9,4 +9,5 @@ abstract class PactRepository {
   Future<Either<Failure, Unit>> savePact(Pact pact);
   Future<Either<Failure, Unit>> updatePactStatus(String id, PactStatus status);
   Future<Either<Failure, Unit>> deletePact(String id);
+  Future<Either<Failure, int>> countPactsByStatus(PactStatus status);
 }
