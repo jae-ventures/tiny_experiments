@@ -20,9 +20,16 @@ const _kNewUserSlotState = SlotState(
 
 /// Provides current slot availability for the dashboard.
 ///
-/// TODO (Epic 3): Make this reactive by watching the active pacts stream so
-/// the Possibility Space updates immediately when a PACT is created or completed.
+/// Watches [activePactsProvider] so the Possibility Space re-renders
+/// immediately on any PACT status transition (create, pause, resume, complete,
+/// abandon). All of those operations change the active-pact count, which
+/// triggers this provider to re-query slot counts and recompute thresholds.
+///
+/// Uses `ref.watch` (not `ref.read`) for the use case so the dependency is
+/// registered — this is intentional and not a mistake.
 final slotStateProvider = FutureProvider<SlotState>((ref) async {
+  // Establish reactive dependency: re-run whenever active pacts change.
+  ref.watch(activePactsProvider);
   final result = await ref.read(getSlotAvailabilityUseCaseProvider).execute();
   return result.fold((_) => _kNewUserSlotState, (s) => s);
 });
