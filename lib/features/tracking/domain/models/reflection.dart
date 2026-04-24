@@ -15,7 +15,7 @@ enum ReflectionDecision {
 }
 
 @freezed
-class Reflection with _$Reflection {
+abstract class Reflection with _$Reflection {
   const factory Reflection({
     required String id,                       // UUID
     required String pactId,
