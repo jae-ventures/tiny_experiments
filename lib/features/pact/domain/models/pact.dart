@@ -10,7 +10,7 @@ enum PactStatus { active, paused, completed, abandoned }
 enum CuriosityTemperature { cold, warm, fiery }
 
 @freezed
-class Pact with _$Pact {
+abstract class Pact with _$Pact {
   const factory Pact({
     required String id,               // UUID
     required String action,           // "I will <action>"

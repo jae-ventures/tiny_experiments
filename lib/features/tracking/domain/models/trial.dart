@@ -10,7 +10,7 @@ enum TrialStatus {
 }
 
 @freezed
-class Trial with _$Trial {
+abstract class Trial with _$Trial {
   const factory Trial({
     required String id,                 // UUID
     required String pactId,

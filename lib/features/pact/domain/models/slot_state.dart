@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'slot_state.freezed.dart';
 
 @freezed
-class SlotState with _$SlotState {
+abstract class SlotState with _$SlotState {
   const factory SlotState({
     required int totalSlots,
     required int usedSlots,
