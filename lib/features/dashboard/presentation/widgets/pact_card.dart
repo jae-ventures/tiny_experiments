@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/error/failure.dart';
 import '../../../../core/router/app_router.dart';
@@ -120,11 +121,11 @@ class _CardHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              pact.action,
+              _commitmentSentence(pact),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.onBackground,
                   ),
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -194,24 +195,72 @@ class _CardBody extends StatelessWidget {
   }
 }
 
+// ── Sentence helper ───────────────────────────────────────────────────────────
+
+/// Mirrors PactFormState.commitmentSentence but derives from the stored Pact.
+/// Day-of-week is read from [pact.startDate] for non-daily cadences.
+String _commitmentSentence(Pact pact) {
+  final cadenceInterval = switch (pact.cadence) {
+    PactCadence.daily => 1,
+    PactCadence.weekly => 7,
+    PactCadence.biweekly => 14,
+    PactCadence.monthly => 30,
+  };
+  final totalDays = pact.durationTrials * cadenceInterval;
+  final durationLabel = _formatDays(totalDays);
+  final dowName = DateFormat('EEEE').format(pact.startDate);
+  final cadencePhrase = switch (pact.cadence) {
+    PactCadence.daily => 'every day',
+    PactCadence.weekly => 'every $dowName',
+    PactCadence.biweekly => 'every other $dowName',
+    PactCadence.monthly => 'every month',
+  };
+  return 'I will ${pact.action} $cadencePhrase for $durationLabel';
+}
+
+String _formatDays(int days) {
+  if (days <= 0) return '';
+  if (days < 7) return '$days ${days == 1 ? 'day' : 'days'}';
+  if (days < 30) {
+    final w = days ~/ 7, r = days % 7;
+    final s = '$w ${w == 1 ? 'week' : 'weeks'}';
+    return r == 0 ? s : '$s and $r ${r == 1 ? 'day' : 'days'}';
+  }
+  if (days < 365) {
+    final m = days ~/ 30, r = days % 30;
+    final s = '$m ${m == 1 ? 'month' : 'months'}';
+    return r == 0 ? s : '$s and $r ${r == 1 ? 'day' : 'days'}';
+  }
+  final y = days ~/ 365, rm = (days % 365) ~/ 30;
+  final s = '$y ${y == 1 ? 'year' : 'years'}';
+  return rm == 0 ? s : '$s and $rm ${rm == 1 ? 'month' : 'months'}';
+}
+
 // ── Progress chart ────────────────────────────────────────────────────────────
 
-/// Visual placeholder for the trial progress chart.
+/// Trial progress chart — dots arranged in a 5-column grid inside an outlined
+/// container.
 ///
-/// Renders each scheduled trial as a small dot colored by status:
-///   - Completed → solid PACT color
-///   - Late → PACT color at 65% opacity
-///   - Skipped → muted gray
-///   - Pending (today/overdue) → outlined with PACT color
-///   - Pending (future) → very faint
+/// The container is the future home of free-flowing animated dots (Epic 3+).
+/// For now the static grid makes the "filling up toward completion" metaphor
+/// immediately legible. Ghost dots pad the last row so the grid feels like a
+/// fixed-size box.
 ///
-/// The visual design of this chart is intentionally minimal and will be
-/// replaced with a more refined calendar or grid layout in a future task.
+/// Status → visual:
+///   - Completed  → solid PACT color
+///   - Late       → PACT color at 65% opacity
+///   - Skipped    → muted gray square
+///   - Pending due/overdue → outlined, PACT color border
+///   - Pending future → very faint
 ///
 /// Spec ref: 03_ui_spec_dashboard.md §4.2 (Progress Chart)
 class _ProgressChart extends StatelessWidget {
   final Color color;
   final List<Trial> trials;
+
+  static const _cols = 5;
+  static const _dotSize = 10.0;
+  static const _dotGap = 4.0;
 
   const _ProgressChart({required this.color, required this.trials});
 
@@ -229,10 +278,37 @@ class _ProgressChart extends StatelessWidget {
     final sorted = List<Trial>.from(trials)
       ..sort((a, b) => a.sequenceIndex.compareTo(b.sequenceIndex));
 
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      children: sorted.map((t) => _TrialDot(trial: t, pactColor: color)).toList(),
+    final total = sorted.length;
+    final rows = (total / _cols).ceil();
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+        color: color.withValues(alpha: 0.04),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(rows, (row) {
+          return Padding(
+            padding: EdgeInsets.only(top: row > 0 ? _dotGap : 0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(_cols, (col) {
+                final idx = row * _cols + col;
+                return Padding(
+                  padding: EdgeInsets.only(left: col > 0 ? _dotGap : 0),
+                  child: idx < total
+                      ? _TrialDot(trial: sorted[idx], pactColor: color)
+                      : _GhostDot(color: color),
+                );
+              }),
+            ),
+          );
+        }),
+      ),
     );
   }
 }
@@ -275,15 +351,37 @@ class _TrialDot extends StatelessWidget {
   }
 }
 
+/// Ghost dot — fills empty grid cells so the box always has a fixed shape.
+class _GhostDot extends StatelessWidget {
+  final Color color;
+  const _GhostDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: _ProgressChart._dotSize,
+      height: _ProgressChart._dotSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.04),
+        border: Border.all(color: color.withValues(alpha: 0.08), width: 1),
+      ),
+    );
+  }
+}
+
 // ── Check-in button ───────────────────────────────────────────────────────────
 
 /// The primary action affordance of the app — a large circle button on the
 /// right side of each card.
 ///
 /// States (spec §4.2):
-///   - pending  → filled PACT color, + icon, tappable
-///   - done     → muted surface, green checkmark, not tappable
-///   - notDue   → muted surface, dim icon, not tappable
+///   - pending  → muted surface, PACT-color border, gray checkmark, tappable
+///   - done     → muted surface, no border, green checkmark, not tappable
+///   - notDue   → muted surface, no border, dim checkmark, not tappable
+///
+/// Using a checkmark in all states (not a plus) reinforces that the user is
+/// checking off a recurring commitment, not creating something new.
 ///
 /// Tapping logs the most-recent actionable trial via [LogTrialUseCase].
 /// The [trialsForPactProvider] stream then auto-refreshes, updating the button.
@@ -332,14 +430,46 @@ class _CheckInButtonState extends ConsumerState<_CheckInButton> {
     final state = _deriveCheckInState(widget.trials);
     const size = 64.0;
 
-    final (Color bg, Color fg, bool enabled) = switch (state) {
-      _CheckInState.pending => (widget.color, AppColors.onPrimary, true),
-      _CheckInState.done => (AppColors.surfaceVariant, AppColors.success, false),
-      _CheckInState.notDue => (AppColors.surfaceVariant, AppColors.onSurfaceDim, false),
+    // pending: outlined circle (transparent fill + full PACT-color border) —
+    //          reads as an empty checkbox ready to be checked off.
+    // done:    filled surface + green checkmark — confirms the log landed.
+    // notDue:  filled surface + dim checkmark — nothing actionable right now.
+    final (Color bg, Color fg, Border? border, List<BoxShadow>? shadow) =
+        switch (state) {
+      _CheckInState.pending => (
+          Colors.transparent,
+          widget.color,
+          Border.all(color: widget.color, width: 2),
+          [
+            BoxShadow(
+              color: widget.color.withValues(alpha: 0.25),
+              blurRadius: 12,
+              spreadRadius: 1,
+            )
+          ],
+        ),
+      _CheckInState.done => (
+          AppColors.success.withValues(alpha: 0.15),
+          AppColors.success,
+          null,
+          [
+            BoxShadow(
+              color: AppColors.success.withValues(alpha: 0.18),
+              blurRadius: 10,
+              spreadRadius: 1,
+            )
+          ],
+        ),
+      _CheckInState.notDue => (
+          AppColors.surfaceVariant,
+          AppColors.onSurfaceDim,
+          null,
+          null,
+        ),
     };
 
     return GestureDetector(
-      onTap: enabled ? _handleTap : null,
+      onTap: state == _CheckInState.pending ? _handleTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         width: size,
@@ -347,15 +477,8 @@ class _CheckInButtonState extends ConsumerState<_CheckInButton> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: bg,
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: widget.color.withValues(alpha: 0.35),
-                    blurRadius: 14,
-                    spreadRadius: 2,
-                  ),
-                ]
-              : null,
+          border: border,
+          boxShadow: shadow,
         ),
         child: Center(
           child: _loading
@@ -368,9 +491,7 @@ class _CheckInButtonState extends ConsumerState<_CheckInButton> {
                   ),
                 )
               : Icon(
-                  state == _CheckInState.done
-                      ? Icons.check_rounded
-                      : Icons.add_rounded,
+                  Icons.check_rounded,
                   color: fg,
                   size: 30,
                 ),

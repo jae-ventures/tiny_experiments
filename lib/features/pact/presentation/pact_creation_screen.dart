@@ -382,20 +382,31 @@ class _Step2PactAction extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
-          // Duration row
+          // Duration row — reads as a sentence: "for [X] days ≈ …"
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Text(
+                'for',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(width: 10),
               SizedBox(
-                width: 80,
+                width: 72,
                 child: TextField(
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     _MaxValueFormatter(3650),
                   ],
+                  textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                    labelText: 'Days',
                     border: const OutlineInputBorder(),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                     errorText: showErrors && !form.isDurationValid ? '' : null,
                   ),
                   controller: TextEditingController.fromValue(
@@ -411,15 +422,23 @@ class _Step2PactAction extends ConsumerWidget {
                   },
                 ),
               ),
+              const SizedBox(width: 10),
+              Text(
+                'days',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade500,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   form.durationLabel.isEmpty
-                      ? '—'
-                      : '≈ ${form.durationLabel}  ·  ${form.durationTrials} ${form.durationTrials == 1 ? 'trial' : 'trials'}',
+                      ? ''
+                      : '≈ ${form.durationLabel}',
                   style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
                   ),
                 ),
               ),
@@ -805,13 +824,12 @@ class _Step5Review extends ConsumerWidget {
     return _StepScaffold(
       stepLabel: 'Step 5 of 5',
       title: 'Review your experiment',
-      subtitle: 'Everything look right?',
+      subtitle: 'Does this feel right?',
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: color.withValues(alpha: 0.35), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
           color: color.withValues(alpha: 0.06),
           boxShadow: [
             BoxShadow(
@@ -824,74 +842,81 @@ class _Step5Review extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Action
+            // ── Commitment sentence ──────────────────────────────────────────
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color.withValues(alpha: 0.85),
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color.withValues(alpha: 0.85),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'I will ${form.action.isEmpty ? '—' : form.action.trim()}',
+                    form.commitmentSentence.isEmpty
+                        ? 'I will … every day for …'
+                        : form.commitmentSentence,
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
 
-            _ReviewRow(
-              label: 'Cadence',
-              value: _cadenceLabel(form.cadence),
-            ),
-            _ReviewRow(
-              label: 'Duration',
-              value:
-                  '${form.durationLabel} · ${form.durationTrials} trials',
-            ),
+            // ── Dates ────────────────────────────────────────────────────────
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
             _ReviewRow(
               label: 'Starts',
               value: dateFormat.format(form.startDate),
             ),
             _ReviewRow(
               label: 'Ends',
-              value: dateFormat.format(form.endDate),
+              value:
+                  '${dateFormat.format(form.endDate)}  ·  ${form.durationTrials} ${form.durationTrials == 1 ? 'trial' : 'trials'}',
             ),
 
+            // ── If/then (optional) ───────────────────────────────────────────
             if (form.ifCondition.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               const Divider(height: 1),
-              const SizedBox(height: 8),
-              _ReviewRow(
-                  label: 'If', value: form.ifCondition.trim()),
-              _ReviewRow(
-                  label: 'Then', value: form.thenAction.trim()),
+              const SizedBox(height: 12),
+              _ReviewRow(label: 'If', value: form.ifCondition.trim()),
+              _ReviewRow(label: 'Then', value: form.thenAction.trim()),
             ],
 
+            // ── Hypothesis (optional) ────────────────────────────────────────
             if (form.hypothesis.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 '"${form.hypothesis.trim()}"',
                 style: TextStyle(
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey.shade400),
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey.shade400,
+                  height: 1.4,
+                ),
               ),
             ],
 
+            // ── Temperature (optional) ───────────────────────────────────────
             if (form.temperature != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               _ReviewRow(
                 label: 'Curiosity',
                 value: _temperatureLabel(form.temperature!),
@@ -902,13 +927,6 @@ class _Step5Review extends ConsumerWidget {
       ),
     );
   }
-
-  static String _cadenceLabel(PactCadence c) => switch (c) {
-        PactCadence.daily => 'Daily',
-        PactCadence.weekly => 'Weekly',
-        PactCadence.biweekly => 'Bi-Weekly',
-        PactCadence.monthly => 'Monthly',
-      };
 
   static String _temperatureLabel(CuriosityTemperature t) => switch (t) {
         CuriosityTemperature.cold => '❄️ Cold',

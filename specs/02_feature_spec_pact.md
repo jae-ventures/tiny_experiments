@@ -445,3 +445,17 @@ The following questions from earlier drafts have been answered:
 
 - Should the if-then implementation intention be surfaced in the notification text? ("It's time to write — your PACT triggers when you sit down with coffee.") — deferred to Epic 7.
 - What happens to paused PACTs in the slot count — do they consume a slot? Current assumption: yes (see project spec open questions).
+
+### Unscheduled trial logging
+
+**Context:** The current check-in button is only active when there is a scheduled trial due today or overdue. A user with a weekly PACT on Mondays has no way to log activity they did on a Thursday.
+
+**Note on late logging:** Overdue trials (missed scheduled days) are already handled — they remain actionable and log as `TrialStatus.late`. This question is strictly about *truly unscheduled* activity beyond the committed cadence.
+
+**Options under consideration:**
+
+- **Option B — Ad-hoc trial:** Allow logging unscheduled activity as a bonus trial entry, visually distinct from committed trials (e.g., a different dot shape or lighter color in the progress grid). This preserves the integrity of the commitment data while capturing extra effort as signal.
+- **Option C — Reflection-only:** Unscheduled activity can only be recorded as a free-form reflection note, not a trial log entry. Keeps trial counts clean and meaningful; extra effort lives in the reflection layer.
+- **Hybrid (leaning direction):** Require a reflection when logging an unscheduled trial — the user must say *something* about why they did it outside the schedule. This makes ad-hoc logs intentional rather than casual, and the reflection note becomes the valuable data. Bonus trials would count toward `completedCount` for the 10-trial gate but be flagged separately in analytics.
+
+**Decision needed before implementation.** Likely belongs in Epic 4 (tracking refinements) or a dedicated Epic 6+ task alongside the reflection flow.

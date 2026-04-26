@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/pact.dart';
@@ -71,16 +72,40 @@ abstract class PactFormState with _$PactFormState {
     if (days < 30) {
       final w = days ~/ 7, r = days % 7;
       final s = '$w ${w == 1 ? 'week' : 'weeks'}';
-      return r == 0 ? s : '$s, $r ${r == 1 ? 'day' : 'days'}';
+      return r == 0 ? s : '$s and $r ${r == 1 ? 'day' : 'days'}';
     }
     if (days < 365) {
       final m = days ~/ 30, r = days % 30;
       final s = '$m ${m == 1 ? 'month' : 'months'}';
-      return r == 0 ? s : '$s, $r ${r == 1 ? 'day' : 'days'}';
+      return r == 0 ? s : '$s and $r ${r == 1 ? 'day' : 'days'}';
     }
     final y = days ~/ 365, rm = (days % 365) ~/ 30;
     final s = '$y ${y == 1 ? 'year' : 'years'}';
-    return rm == 0 ? s : '$s, $rm ${rm == 1 ? 'month' : 'months'}';
+    return rm == 0 ? s : '$s and $rm ${rm == 1 ? 'month' : 'months'}';
+  }
+
+  // ── Human-readable commitment sentence ───────────────────────────────────
+
+  /// Returns the day-of-week name for non-daily cadences.
+  /// Uses a fixed Monday-anchored week (Jan 1 2024 = Monday, weekday 1).
+  String _dowName(int dow) =>
+      DateFormat('EEEE').format(DateTime(2024, 1, dow));
+
+  String get _cadencePhrase {
+    final dow = dayOfWeek ?? startDate.weekday;
+    return switch (cadence) {
+      PactCadence.daily => 'every day',
+      PactCadence.weekly => 'every ${_dowName(dow)}',
+      PactCadence.biweekly => 'every other ${_dowName(dow)}',
+      PactCadence.monthly => 'every month',
+    };
+  }
+
+  /// Full commitment sentence shown on the Step 5 review card.
+  /// e.g. "I will build an AI project every Saturday for 3 months"
+  String get commitmentSentence {
+    if (action.trim().isEmpty || durationDays < 1) return '';
+    return 'I will ${action.trim()} $_cadencePhrase for $durationLabel';
   }
 
   // ── Validation ────────────────────────────────────────────────────────────
