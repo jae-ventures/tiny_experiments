@@ -95,6 +95,7 @@ class CreatePactUseCase {
       PactCadence.daily => 1,
       PactCadence.weekly => 7,
       PactCadence.biweekly => 14,
+      PactCadence.monthly => 30,
     };
     return startDate.add(Duration(days: offsetDays * (durationTrials - 1)));
   }

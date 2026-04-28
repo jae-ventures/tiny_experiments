@@ -2,7 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'pact.freezed.dart';
 
-enum PactCadence { daily, weekly, biweekly }
+enum PactCadence { daily, weekly, biweekly, monthly }
 
 enum PactStatus { active, paused, completed, abandoned }
 

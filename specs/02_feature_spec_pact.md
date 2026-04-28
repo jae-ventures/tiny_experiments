@@ -346,20 +346,116 @@ class CreatePactState with _$CreatePactState {
 
 ## 11. Notifications
 
-PACT creation triggers scheduling of local notifications via `flutter_local_notifications`:
+**Deferred to Epic 7.** Notification scheduling will be implemented as a dedicated feature rather than bundled into PACT creation, keeping Epic 3 focused on the creation flow and detail screen.
 
+When implemented, the notification layer should handle:
 - A daily reminder at the user's preferred time (global setting) for each active PACT
 - A reflection prompt notification when a reflection checkpoint is reached
 - A double-skip alert when two consecutive trials are missed
-- Notifications are rescheduled when a PACT is paused, resumed, or completed
+- Rescheduling when a PACT is paused, resumed, or completed
 
-Notification payloads include the `pactId` so the app deep-links directly to the relevant PACT on tap.
+Notification payloads should include the `pactId` so the app deep-links directly to the relevant PACT on tap.
 
 ---
 
-## 12. Open Questions
+## 12. PACT Detail Screen
 
-- Should the if-then implementation intention be surfaced in the notification text? ("It's time to write — your PACT triggers when you sit down with coffee.")
-- Should users be able to edit a PACT after creation, or only create new ones (to preserve experiment integrity)?
-- What happens to pending trials when a PACT is paused — are they rescheduled, or does the end date extend?
-- Is the curiosity temperature editable after creation, or locked at creation time?
+### 12.1 Philosophy
+
+The detail screen is a read-only window into an experiment in progress. It answers one question: *how is this going?* It does not offer editing — the PACT is a commitment, and changing it mid-run would corrupt the integrity of the experiment data.
+
+### 12.2 Layout
+
+```
+┌──────────────────────────────────────────┐
+│  ← Back                                  │  ← App bar
+├──────────────────────────────────────────┤
+│  PACT Summary Card                       │  ← What the user committed to
+│  ─────────────────────────────────────   │
+│  "I will [action]"                       │
+│  [cadence] · [durationTrials] trials     │
+│  [startDate] → [endDate]                 │
+│                                          │
+│  Hypothesis: [text]          (if set)    │
+│  If [trigger], then [action] (if set)    │
+│  Temperature: ❄/〜/🔥         (if set)   │
+├──────────────────────────────────────────┤
+│  Trial Progress                          │  ← Date-connected chart
+│  ─────────────────────────────────────   │
+│  [dot grid — see §12.3]                  │
+│                                          │
+│  ✓ 8 completed   ✗ 2 skipped            │
+│  ○ 20 remaining                          │
+├──────────────────────────────────────────┤
+│  Reflect today   (optional, always open) │  ← Same footer as card
+└──────────────────────────────────────────┘
+```
+
+### 12.3 Trial Progress Chart (Date-Connected)
+
+The detail screen expands the compact dot preview shown on the PACT card into a full date-annotated trial grid. The card-level chart is deliberately a "peek" at this view — same visual language, more resolution.
+
+**Visual language (shared between card preview and detail chart):**
+
+| Trial status | Shape | Color |
+|---|---|---|
+| Completed | Circle (filled) | PACT's palette color |
+| Late | Circle (filled) | PACT color at 65% opacity |
+| Skipped | Square or diamond | Muted amber / desaturated warm tone — clearly "off" without being alarming |
+| Pending — due today / overdue | Circle (outline only) | PACT color stroke |
+| Pending — future | Circle (faint outline) | PACT color at ~15% opacity |
+
+The card preview renders these shapes in a compact `Wrap` grid (10×10 px cells) with no date labels — a visual density indicator only.
+
+The detail chart renders the same shapes but each cell is:
+- Larger (accessible tap target, ~28×28 px)
+- Positioned on a calendar-style grid where each dot's column is its day of week (daily PACTs) or its week number (weekly / biweekly PACTs)
+- Labeled below with the abbreviated date (e.g., "Apr 24", "Week 3")
+
+Sessions from a resumed PACT are visually separated: a subtle divider row with a "Session 2" label, and the resumed session's dots use a lighter tint of the PACT color (consistent with the card view spec in §4.2 of the dashboard spec).
+
+**Counters below the chart:**
+- `✓ N completed` (completed + late)
+- `✗ N skipped`
+- `○ N remaining` (pending future trials)
+
+### 12.4 Reflection Footer
+
+Identical to the card's `_ReflectionFooter` — temperature selector + quick-note field + save trigger. Always visible, always optional. Saves as an informal reflection linked to the PACT.
+
+---
+
+## 13. Closed Design Decisions
+
+The following questions from earlier drafts have been answered:
+
+- **PACT editing post-creation: not allowed.** The PACT is a commitment. Editing the action, cadence, or duration after creation would undermine the integrity of the experiment data (trial schedule would be invalidated, metrics would be meaningless). The UI offers no edit affordance. Users who want a different experiment should complete/abandon and create a new PACT.
+
+- **Curiosity temperature post-creation: locked.** The temperature set at creation reflects the user's initial curiosity level. It can be updated via formal reflections (persist/pause/pivot flow) but not edited directly.
+
+- **Post-creation navigation: return to dashboard.** After a PACT is successfully created, the user is returned to the dashboard. The newly created PACT's slot dot in the Possibility Space plays a brief "arrival" animation — blooming from 0 scale with its palette color — to visually confirm the experiment has begun. See dashboard spec §3.4 for animation details.
+
+- **Notifications: deferred to Epic 7.** See §11 above.
+
+- **What happens to pending trials when a PACT is paused:** Pending trials are left as-is in the database. Their scheduled dates are not moved. When the user resumes, the auto-skip detection sweep will mark any trials whose window has passed as skipped. The end date does not extend. This means a paused PACT will "lose" those trial slots — a deliberate trade-off that keeps the data model simple and discourages indefinite pausing.
+
+---
+
+## 14. Open Questions
+
+- Should the if-then implementation intention be surfaced in the notification text? ("It's time to write — your PACT triggers when you sit down with coffee.") — deferred to Epic 7.
+- What happens to paused PACTs in the slot count — do they consume a slot? Current assumption: yes (see project spec open questions).
+
+### Unscheduled trial logging
+
+**Context:** The current check-in button is only active when there is a scheduled trial due today or overdue. A user with a weekly PACT on Mondays has no way to log activity they did on a Thursday.
+
+**Note on late logging:** Overdue trials (missed scheduled days) are already handled — they remain actionable and log as `TrialStatus.late`. This question is strictly about *truly unscheduled* activity beyond the committed cadence.
+
+**Options under consideration:**
+
+- **Option B — Ad-hoc trial:** Allow logging unscheduled activity as a bonus trial entry, visually distinct from committed trials (e.g., a different dot shape or lighter color in the progress grid). This preserves the integrity of the commitment data while capturing extra effort as signal.
+- **Option C — Reflection-only:** Unscheduled activity can only be recorded as a free-form reflection note, not a trial log entry. Keeps trial counts clean and meaningful; extra effort lives in the reflection layer.
+- **Hybrid (leaning direction):** Require a reflection when logging an unscheduled trial — the user must say *something* about why they did it outside the schedule. This makes ad-hoc logs intentional rather than casual, and the reflection note becomes the valuable data. Bonus trials would count toward `completedCount` for the 10-trial gate but be flagged separately in analytics.
+
+**Decision needed before implementation.** Likely belongs in Epic 4 (tracking refinements) or a dedicated Epic 6+ task alongside the reflection flow.

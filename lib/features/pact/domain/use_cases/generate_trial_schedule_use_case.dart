@@ -40,5 +40,6 @@ class GenerateTrialScheduleUseCase {
         PactCadence.daily => 1,
         PactCadence.weekly => 7,
         PactCadence.biweekly => 14,
+        PactCadence.monthly => 30,
       };
 }

@@ -121,9 +121,9 @@ class PossibilitySpace extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final slotStateAsync = ref.watch(slotStateProvider);
-
-    // Show a sensible default while the async load resolves (typically instant).
+    // Use asData?.value so that while slotStateProvider re-queries (e.g. after
+    // a PACT is created), the canvas keeps the previous SlotState rather than
+    // briefly snapping to the default and flickering the dots.
     const defaultState = SlotState(
       totalSlots: 1,
       usedSlots: 0,
@@ -131,11 +131,8 @@ class PossibilitySpace extends ConsumerWidget {
       pactsUntilNextSlot: 3,
     );
 
-    final slotState = slotStateAsync.when(
-      data: (s) => s,
-      loading: () => defaultState,
-      error: (err, _) => defaultState,
-    );
+    final slotState =
+        ref.watch(slotStateProvider).asData?.value ?? defaultState;
 
     return _PossibilitySpaceCanvas(slotState: slotState);
   }
